@@ -1,28 +1,68 @@
 import { Injectable } from '@angular/core';
-import { Http, Response } from '@angular/http';
+import { Http, Response, Headers } from '@angular/http';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/toPromise';
 import { Observable } from 'rxjs/Observable';
- 
+import 'rxjs/add/observable/throw';
+//import { AcharyaModal } from './acharya-modal.ts'
+
 @Injectable()
 export class AcharyaService {
 
+    //public Acharya = new AcharyaModal;
+    private headers = new Headers({'Content-Type':'application/json'});
     http: Http;
-    archaryaServiceURL= "http://192.168.33.10/Acharyalocal/connection.php";
-
+    private archaryaServiceURL= "http://api.yiiangularbasic.com/index.php?r=acharyalistrest";
+    responseData:any;
 
     constructor(http: Http){
        this.http = http;
 
     }
-     
-    getAcharyas(): Observable<any[]> {
-            return this.http.get(this.archaryaServiceURL)
-            .map(this.extractData)
+  // Get Acharya Details   
+    getAcharyas(): Promise<any> {
+            const url = this.archaryaServiceURL;
+            console.log(url);
+            return this.http.get(url)
+            .toPromise()
+            .then(response => response.json().data as any)
             .catch(this.handleError);
+            /*.map(this.extractData)
+            .catch(this.handleError);*/
     }
 
+ 
+//Insert Acharya Details
+    signUp(name: string, email:string, phone:string): Promise<any> {
+        //signUp(name: string, email:string, phone:string) {
+        //console.log(name+' '+email+ ' '+phone);
+
+       
+        let body = JSON.stringify({
+            name: name,
+            email: email,
+            phone: phone
+        });
+         //this.javascriptAbort();
+        //this.http.post(this.archaryaServiceURL+'/create',body,this.headers).subscribe();
+        return this.http.post(this.archaryaServiceURL+'/create',body,this.headers)
+        .toPromise()
+        .then(response=>console.log(response))         
+        .catch(this.handleError);
+        
+            /* return this.http.post(this.archaryaServiceURL+'/create', body, this.headers)
+            .toPromise()
+            .then(
+                    response =>{
+            //            console.log(res.json().data);
+                         this.responseData=response.json().data;
+                         console.log(this.responseData);
+                         response.json().data as any
+                         }
+                    )
+                .catch( this.handleError);*/
+    }
 
     getAcharyabySalutation(salutation: String): Observable<any[]> {
         console.log("AcharyaService-> InsidegetAcharyabySalutation "+ salutation);
@@ -48,12 +88,13 @@ export class AcharyaService {
         return body || [];
     }
 
-    private handleError(error:any) {
-        // In a real world app, we might use a remote logging infrastructure
-        // We'd also dig deeper into the error to get a better message
-        let errMsg = (error.message) ? error.message :
-            error.status ? `${error.status} - ${error.statusText}` : 'Server error';
-        console.error(errMsg); // log to console instead
-        return Observable.throw(errMsg);
+    private handleError(error:any): Promise<any> {
+      console.error('An error occurred', error); 
+      return Promise.reject(error.message || error);
     }
+
+    private javascriptAbort()
+        {
+           throw new Error('This is not an error. This is just to abort javascript');
+        }
 }
